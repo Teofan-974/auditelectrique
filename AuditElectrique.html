@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-Audit Electrique Domestique</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f7; color: #333; line-height: 1.5; padding-bottom: 80px; }
+  header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 30px 20px; text-align: center; }
+  header h1 { font-size: 1.8em; margin-bottom: 5px; }
+  header p { opacity: 0.85; }
+  .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+  fieldset { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #3498db; }
+  legend { font-weight: bold; font-size: 1.1em; padding: 5px 15px; background: #3498db; color: white; border-radius: 4px; }
+  label { display: block; margin-top: 12px; font-weight: 600; font-size: 0.95em; }
+  input[type="text"], input[type="date"], input[type="number"], select, textarea { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; }
+  textarea { min-height: 70px; resize: vertical; }
+  .check-item { display: flex; align-items: flex-start; padding: 8px; border-bottom: 1px solid #eee; }
+  .check-item input { width: 22px; height: 22px; margin-right: 12px; flex-shrink: 0; cursor: pointer; }
+  .check-item label { font-weight: normal; cursor: pointer; margin: 0; padding-top: 0; }
+  .check-item input:checked + label { color: #c0392b; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 0.9em; vertical-align: middle; }
+  th { background: #3498db; color: white; }
+  button { background: #27ae60; color: white; border: none; padding: 10px 20px; margin-top: 15px; cursor: pointer; border-radius: 5px; font-size: 1em; margin-right: 10px; }
+  button.secondary { background: #e67e22; }
+  button.danger { background: #c0392b; }
+  .toolbar { position: fixed; bottom: 0; left: 0; right: 0; background: #2c3e50; padding: 12px; text-align: center; z-index: 100; }
+  .save-indicator { color: #2ecc71; font-size: 0.9em; }
+  .danger-zone { margin-top: 30px; text-align: center; padding: 20px; border-top: 2px dashed #c0392b; }
+  .warning { background: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 0.9em; border-left: 4px solid #f39c12; }
+  img.preview-img { max-width: 100px; max-height: 75px; object-fit: cover; border: 1px solid #ddd; display: block; }
+  .img-error { color: #c0392b; font-size: 0.8em; font-style: italic; }
+  @media print { .toolbar, .danger-zone, .btn-del { display: none; } fieldset { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#9889; Pre-Audit Electrique Domestique</h1>
+  <p>Maison ~30 ans - Mise aux normes NF C 15-100 & Technologies</p>
+</header>
+
+<div class="container">
+
+  <!-- SECTION 1 -->
+  <fieldset>
+    <legend>1. Informations Generales</legend>
+    <label>Date de l'audit</label><input type="date" id="date_audit">
+    <label>Type de logement</label>
+    <select id="type_logement">
+      <option value=""></option><option>Maison individuelle</option><option>Appartement</option>
+    </select>
+    <label>Surface estimee (m2)</label><input type="number" id="surface">
+    <label>Nombre de pieces principales</label><input type="number" id="nb_pieces">
+    <label>Annee estimee de l'installation</label><input type="text" id="annee" placeholder="ex: 1996">
+  </fieldset>
+
+  <!-- SECTION 2 -->
+  <fieldset>
+    <legend>2. Etat du Tableau Principal</legend>
+    <label>Type de protection</label>
+    <select id="type_protection">
+      <option value=""></option>
+      <option>Fusibles ceramiques (ronds)</option>
+      <option>Cartouches fusibles (a fil)</option>
+      <option>Disjoncteurs</option><option>Mixte</option>
+    </select>
+    <label>Nombre d'interrupteurs differentiels</label><input type="number" id="nb_diff">
+    <label>Sensibilite des differentiels</label>
+    <select id="sensibilite">
+      <option value=""></option><option>30 mA</option><option>300 mA</option><option>Inconnu</option>
+    </select>
+    <label>Nombre de disjoncteurs / fusibles divisionnaires</label><input type="number" id="nb_disj">
+    <label>Espaces libres sur le tableau</label>
+    <select id="espace_libre">
+      <option value=""></option><option>Oui, suffisamment</option><option>Non, sature</option>
+    </select>
+    <label>Presence d'une GTL (gaine technique)</label>
+    <select id="gtl">
+      <option value=""></option><option>Oui</option><option>Non</option><option>Ne sait pas</option>
+    </select>
+    <label>Etat general du tableau (observations)</label>
+    <textarea id="etat_tableau" placeholder="Propre, poussiereux, odeur de brule, cables denudes..."></textarea>
+  </fieldset>
+
+  <!-- SECTION 3 -->
+  <fieldset>
+    <legend>3. Releve des Circuits</legend>
+    <div class="warning">&#9888;&#65039; Coupez le disjoncteur principal avant de toucher aux protections. Identifiez chaque circuit en ouvrant une protection a la fois.</div>
+    <table>
+      <thead><tr>
+        <th style="width:5%">#</th><th style="width:10%">Protection (A)</th><th style="width:25%">Pieces desservies</th>
+        <th style="width:15%">Type de prises</th><th style="width:10%">Eclairage ?</th><th style="width:25%">Circuit specialise</th><th style="width:10%"></th>
+      </tr></thead>
+      <tbody id="circuitsBody"></tbody>
+    </table>
+    <button class="secondary" id="btnAddCircuit">+ Ajouter un circuit</button>
+  </fieldset>
+
+  <!-- SECTION 4 -->
+  <fieldset>
+    <legend>4. Grille des Risques Majeurs (10 points)</legend>
+    <div class="warning">Chaque case cocher = 1 point de danger. 2 points ou plus = intervention professionnelle urgente recommandee.</div>
+    <div id="riskList"></div>
+  </fieldset>
+
+  <!-- SECTION 5 -->
+  <fieldset>
+    <legend>5. Besoins Technologiques Futurs</legend>
+    <div id="techList"></div>
+  </fieldset>
+
+  <!-- SECTION 6 : PHOTOS -->
+  <fieldset>
+    <legend>6. Photos</legend>
+    <div class="warning">
+      Placez vos photos dans un sous-dossier <strong>"photos"</strong> &#224; c&#244;t&#233; de ce fichier HTML.<br>
+      Saisissez le chemin relatif, ex : <code>photos/tableau-01.jpg</code>
+    </div>
+    <table>
+      <thead><tr><th style="width:12%">Aper&#231;u</th><th style="width:30%">Chemin du fichier</th><th>L&#233;gende / description</th><th style="width:5%"></th></tr></thead>
+      <tbody id="photosBody"></tbody>
+    </table>
+    <button class="secondary" id="btnAddPhoto">+ Ajouter une photo</button>
+  </fieldset>
+
+  <!-- SECTION 7 -->
+  <fieldset>
+    <legend>7. Notes Libres / Questions pour l'electricien</legend>
+    <textarea id="notes" placeholder="Ecrivez vos observations, doutes, questions..." style="min-height:120px;"></textarea>
+  </fieldset>
+
+  <div class="danger-zone">
+    <button id="btnExport">Exporter le rapport (fichier texte)</button>
+    <button class="secondary" id="btnPrint">Imprimer la fiche</button>
+    <button class="danger" id="btnReset">Tout effacer</button>
+  </div>
+
+</div>
+
+<div class="toolbar">
+  <span style="color:white; font-size:0.95em;">Statut : <span id="status" class="save-indicator">Initialisation...</span></span>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "preAuditElectrique_v2_1";
+
+  var risks = [
+    "1. Terre absente (prises sans broche de terre)",
+    "2. Protection differentielle insuffisante (moins d'1 diff. pour 8 circuits max)",
+    "3. Surintensite non protegee (fusible inadapte a la section du fil)",
+    "4. Conducteur de terre manquant dans les prises",
+    "5. Pieces humides sans protection dediee (SDB, cuisine)",
+    "6. Fils denudes / isolation degradee / odeur de brule",
+    "7. Tableau inaccessible / encombre / hors gabarit",
+    "8. Usage permanent de rallonges et multiprises",
+    "9. Liaison equipotentielle absente en salle de bain",
+    "10. Materiel obsolete (fusibles a fil, prises a vis)"
+  ];
+
+  var techs = [
+    "Recharge vehicule electrique (borne IRVE)",
+    "Panneaux solaires / photovoltaique",
+    "Domotique / interrupteurs connectes",
+    "Pompe a chaleur ou chauffage moderne",
+    "Prises RJ45 / fibre optique",
+    "Gestionnaire d'energie"
+  ];
+
+  // IDs des champs simples (sans circuits/photos)
+  var FIELD_IDS = ["date_audit","type_logement","surface","nb_pieces","annee",
+                   "type_protection","nb_diff","sensibilite","nb_disj",
+                   "espace_libre","gtl","etat_tableau","notes"];
+
+  var circuitSeq = 0;
+
+  function $(id) { return document.getElementById(id); }
+
+  function setStatus(msg) {
+    $("status").textContent = msg;
+  }
+
+  // --- Construction des listes de checkboxes ---
+  function buildCheckboxList(containerId, items, prefix) {
+    var container = $(containerId);
+    container.innerHTML = "";
+    items.forEach(function (text, i) {
+      var item = document.createElement("div");
+      item.className = "check-item";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = prefix + "_" + i;
+      cb.addEventListener("change", save);
+      var lab = document.createElement("label");
+      lab.setAttribute("for", cb.id);
+      lab.textContent = text;
+      item.appendChild(cb);
+      item.appendChild(lab);
+      container.appendChild(item);
+    });
+  }
+
+  // --- Gestion des Circuits ---
+  function getCircuitRows() {
+    return Array.prototype.slice.call(document.querySelectorAll("#circuitsBody tr"));
+  }
+
+  function addCircuit(data) {
+    data = data || {};
+    circuitSeq++;
+    var row = document.createElement("tr");
+
+    var cells = [
+      { tag: "input", type: "text", value: data.num || ("C" + circuitSeq), ph: "" },
+      { tag: "input", type: "text", value: data.amp || "", ph: "16A" },
+      { tag: "input", type: "text", value: data.pieces || "", ph: "Salon, chambre..." },
+      null, // select prises
+      null, // select eclairage
+      { tag: "input", type: "text", value: data.spec || "", ph: "Four, chauffe-eau..." }
+    ];
+
+    cells.forEach(function (cellDef, idx) {
+      var td = document.createElement("td");
+      var el;
+      if (cellDef && cellDef.tag === "input") {
+        el = document.createElement("input");
+        el.type = "text";
+        el.className = "table-input";
+        if (cellDef.value) el.value = cellDef.value;
+        el.placeholder = cellDef.ph;
+      } else if (idx === 3) {
+        el = document.createElement("select");
+        [["", ""],["Plates avec terre","Plates avec terre"],["Rondes sans terre","Rondes sans terre"],
+         ["Mixte","Mixte"],["N/A","N/A (eclairage pur)"]].forEach(function (opt) {
+          var o = document.createElement("option");
+          o.value = opt[0]; o.textContent = opt[1];
+          if (data.prises === opt[0]) o.selected = true;
+          el.appendChild(o);
+        });
+      } else {
+        el = document.createElement("select");
+        [["", ""],["Oui","Oui"],["Non","Non"]].forEach(function (opt) {
+          var o = document.createElement("option");
+          o.value = opt[0]; o.textContent = opt[1];
+          if (data.ecl === opt[0]) o.selected = true;
+          el.appendChild(o);
+        });
+      }
+      el.addEventListener("change", save);
+      el.addEventListener("input", debounceSave);
+      td.appendChild(el);
+      row.appendChild(td);
+    });
+
+    // Bouton suppression
+    var tdDel = document.createElement("td");
+    var btn = document.createElement("button");
+    btn.className = "danger btn-del";
+    btn.style.padding = "5px 10px";
+    btn.style.margin = "0";
+    btn.textContent = "X";
+    btn.addEventListener("click", function () {
+      row.remove();
+      save();
+    });
+    tdDel.appendChild(btn);
+    row.appendChild(tdDel);
+
+    $("circuitsBody").appendChild(row);
+  }
+
+  // --- Gestion des Photos ---
+  function getPhotoRows() {
+    return Array.prototype.slice.call(document.querySelectorAll("#photosBody tr"));
+  }
+
+  function addPhoto(data) {
+    data = data || {};
+    var row = document.createElement("tr");
+
+    // Colonne Image
+    var tdImg = document.createElement("td");
+    var img = document.createElement("img");
+    img.className = "preview-img";
+    img.alt = data.caption || "";
+    img.onerror = function () {
+      tdImg.innerHTML = "<span class='img-error'>Introuvable</span>";
+    };
+    if (data.path) {
+      img.src = data.path;
+    }
+    tdImg.appendChild(img);
+
+    // Colonne Chemin
+    var tdPath = document.createElement("td");
+    var inpPath = document.createElement("input");
+    inpPath.type = "text";
+    inpPath.className = "table-input";
+    inpPath.placeholder = "photos/photo.jpg";
+    inpPath.value = data.path || "";
+    inpPath.addEventListener("change", function () {
+      img.src = inpPath.value;
+      save();
+    });
+    tdPath.appendChild(inpPath);
+
+    // Colonne Legende
+    var tdCap = document.createElement("td");
+    var inpCap = document.createElement("input");
+    inpCap.type = "text";
+    inpCap.className = "table-input";
+    inpCap.placeholder = "Description de la photo...";
+    inpCap.value = data.caption || "";
+    inpCap.addEventListener("change", save);
+    inpCap.addEventListener("input", debounceSave);
+    tdCap.appendChild(inpCap);
+
+    // Bouton Suppression
+    var tdDel = document.createElement("td");
+    var btn = document.createElement("button");
+    btn.className = "danger btn-del";
+    btn.style.padding = "5px 10px";
+    btn.style.margin = "0";
+    btn.textContent = "X";
+    btn.addEventListener("click", function () { row.remove(); save(); });
+    tdDel.appendChild(btn);
+
+    row.appendChild(tdImg);
+    row.appendChild(tdPath);
+    row.appendChild(tdCap);
+    row.appendChild(tdDel);
+    $("photosBody").appendChild(row);
+  }
+
+  // --- Debounce pour la saisie clavier ---
+  var saveTimer = null;
+  function debounceSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 400);
+  }
+
+  // --- Sauvegarde ---
+  function save() {
+    try {
+      var data = {};
+      FIELD_IDS.forEach(function (id) {
+        var el = $(id);
+        if (el) data[id] = el.value;
+      });
+      
+      // Circuits
+      data.circuits = getCircuitRows().map(function (row) {
+        var inputs = row.querySelectorAll("input, select");
+        return {
+          num: inputs[0].value, amp: inputs[1].value, pieces: inputs[2].value,
+          prises: inputs[3].value, ecl: inputs[4].value, spec: inputs[5].value
+        };
+      });
+
+      // Photos
+      data.photos = getPhotoRows().map(function (row) {
+        var inputs = row.querySelectorAll("input");
+        return { path: inputs[0].value, caption: inputs[1].value };
+      });
+
+      // Risques & Techs
+      data.risks = risks.map(function (_, i) {
+        var el = $("risk_" + i);
+        return el ? el.checked : false;
+      });
+      data.techs = techs.map(function (_, i) {
+        var el = $("tech_" + i);
+        return el ? el.checked : false;
+      });
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setStatus("Sauvegarde OK");
+    } catch (e) {
+      setStatus("ERREUR : sauvegarde impossible (" + e.message + ")");
+    }
+  }
+
+  // --- Chargement ---
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { setStatus("Nouvelle fiche - sauvegarde active"); return; }
+      var data = JSON.parse(raw);
+      
+      FIELD_IDS.forEach(function (id) {
+        var el = $(id);
+        if (el && data[id] !== undefined) el.value = data[id];
+      });
+
+      // Circuits
+      $("circuitsBody").innerHTML = "";
+      if (data.circuits && data.circuits.length > 0) {
+        data.circuits.forEach(addCircuit);
+      } else {
+        addCircuit();
+      }
+
+      // Photos
+      $("photosBody").innerHTML = "";
+      if (data.photos && data.photos.length > 0) {
+        data.photos.forEach(addPhoto);
+      }
+
+      // Risques & Techs
+      (data.risks || []).forEach(function (chk, i) {
+        var el = $("risk_" + i);
+        if (el) el.checked = !!chk;
+      });
+      (data.techs || []).forEach(function (chk, i) {
+        var el = $("tech_" + i);
+        if (el) el.checked = !!chk;
+      });
+      
+      setStatus("Donnees rechargees");
+    } catch (e) {
+      setStatus("ERREUR de chargement : " + e.message);
+    }
+  }
+
+  // --- Export ---
+  function exportData() {
+    var get = function (id) { var el = $(id); return el ? el.value : ""; };
+    var txt = "=== PRE-AUDIT ELECTRIQUE DOMESTIQUE ===\n\n";
+    txt += "Date : " + get("date_audit") + "\n";
+    txt += "Logement : " + get("type_logement") + " (" + get("surface") + " m2, " + get("nb_pieces") + " pieces)\n";
+    txt += "Annee installation : " + get("annee") + "\n\n--- TABLEAU ---\n";
+    txt += "Protection : " + get("type_protection") + " | Differentiels : " + get("nb_diff") + " (" + get("sensibilite") + ") | Disjoncteurs : " + get("nb_disj") + "\n";
+    txt += "Espaces libres : " + get("espace_libre") + " | GTL : " + get("gtl") + "\n";
+    txt += "Observations : " + get("etat_tableau") + "\n\n--- CIRCUITS ---\n";
+    
+    getCircuitRows().forEach(function (row) {
+      var i = row.querySelectorAll("input, select");
+      txt += i[0].value + " | " + i[1].value + " | " + i[2].value + " | Prises: " + i[3].value + " | Ecl.: " + i[4].value + " | Spec.: " + i[5].value + "\n";
+    });
+
+    txt += "\n--- RISQUES IDENTIFIES ---\n";
+    var r = risks.filter(function (_, i) { var el = $("risk_" + i); return el && el.checked; });
+    txt += r.length ? r.join("\n") : "Aucun (ou non encore evalue)";
+
+    txt += "\n\n--- TECHNOLOGIES ENVISAGEES ---\n";
+    var t = techs.filter(function (_, i) { var el = $("tech_" + i); return el && el.checked; });
+    txt += t.length ? t.join("\n") : "Aucune";
+
+    txt += "\n\n--- PHOTOS ---\n";
+    getPhotoRows().forEach(function (row) {
+      var i = row.querySelectorAll("input");
+      txt += "- " + i[0].value + " : " + i[1].value + "\n";
+    });
+
+    txt += "\n--- NOTES ---\n" + get("notes") + "\n";
+
+    var blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "pre-audit-electrique.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function resetAll() {
+    if (confirm("Effacer definitivement toutes les donnees saisies ?")) {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+  }
+
+  // --- Initialisation ---
+  function init() {
+    buildCheckboxList("riskList", risks, "risk");
+    buildCheckboxList("techList", techs, "tech");
+    
+    addCircuit();
+    addPhoto(); // Ajout d'une ligne photo par defaut
+
+    // Bindings boutons
+    $("btnAddCircuit").addEventListener("click", function () { addCircuit(); save(); });
+    $("btnAddPhoto").addEventListener("click", function () { addPhoto(); save(); });
+    $("btnExport").addEventListener("click", exportData);
+    $("btnPrint").addEventListener("click", function () { window.print(); });
+    $("btnReset").addEventListener("click", resetAll);
+
+    // Bindings champs
+    FIELD_IDS.forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.addEventListener("change", save);
+      el.addEventListener("input", debounceSave);
+    });
+
+    load();
+    save();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
